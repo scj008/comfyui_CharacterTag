@@ -1,0 +1,95 @@
+import { app } from "../../scripts/app.js";
+
+app.registerExtension({
+    name: "Opentag Monitor",
+    async setup() {
+        console.log("✅ 插件已加载 - 等待工作流准备就绪");
+
+        // 防抖计时器变量
+        let debounceTimer = null;
+
+        // 使用回调函数确保在节点添加后执行检查
+        const checkNodes = () => {
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+                debounceTimer = null;
+            }
+
+            if (!app.graph) {
+                console.error("❌ app.graph 未定义！");
+                return;
+            }
+
+            const nodes = app.graph.nodes || [];
+            console.log(`📋 当前工作流中有 ${nodes.length} 个节点`);
+
+            // 扩展节点类型匹配条件
+            const opentagNodes = nodes.filter(node =>
+                node?.type.includes("打开提示词标签") ||
+                node?.type === "打开提示词标签"
+            );
+
+            if (opentagNodes.length === 0) {
+                console.log("⚠️ 工作流中没有找到Opentag节点");
+                return;
+            }
+
+            // 遍历所有Opentag节点并检查控件列表
+            opentagNodes.forEach((node, index) => {
+                console.log(`\n🔧 检查节点 ${index + 1}/${opentagNodes.length}: ID ${node.id}`);
+                console.log(`  节点类型: ${node.type}`);
+
+                // 检查控件是否存在
+                const inputTextWidget = node.widgets?.find(w => w.name === "input_text");
+                const inputText1Widget = node.widgets?.find(w => w.name === "input_text1");
+                const testReplaceWidget = node.widgets?.find(w => w.name === "测试替换1");
+
+                // 输出结果
+                console.log(inputTextWidget ? "✅ 找到 input_text 控件" : "❌ 未找到 input_text 控件");
+                console.log(inputText1Widget ? "✅ 找到 input_text1 控件" : "❌ 未找到 input_text1 控件");
+                console.log(testReplaceWidget ? "✅ 找到 测试替换1 控件" : "❌ 未找到 测试替换1 控件");
+
+                // 详细输出所有控件列表
+                if (node.widgets?.length > 0) {
+                    console.log("📋 节点控件列表 (共 " + node.widgets.length + " 个):");
+                    node.widgets.forEach((widget, i) => {
+                        console.log(`  ${i + 1}. ${widget.name} (类型: ${widget.type})`);
+
+                        // 输出控件的当前值（如果可用）
+                        if (widget.value !== undefined) {
+                            console.log(`    当前值: ${JSON.stringify(widget.value)}`);
+                        }
+
+                        // 输出控件的选项（如果是下拉菜单）
+                        if (widget.options) {
+                            console.log(`    选项: ${JSON.stringify(widget.options)}`);
+                        }
+                    });
+                } else {
+                    console.log("⚠️ 该节点没有控件");
+                }
+            });
+        };
+
+        // 防抖版本的检查函数
+        const debouncedCheckNodes = () => {
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(checkNodes, 300); // 300ms防抖时间
+        };
+
+        // 初始检查（使用防抖）
+        debouncedCheckNodes();
+
+        // 监听节点添加事件（使用防抖）
+        app.graph.onNodeAdded = function(node) {
+            console.log(`➕ 节点添加: ${node.type}`);
+            debouncedCheckNodes();
+        };
+
+        // 监听工作流变更事件（使用防抖）
+        app.graph.onConfigure = function() {
+            console.log("🔄 工作流配置变更");
+            debouncedCheckNodes();
+        };
+    },
+});

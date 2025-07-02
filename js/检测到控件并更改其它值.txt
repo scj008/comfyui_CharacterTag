@@ -1,0 +1,94 @@
+import { app } from "../../scripts/app.js";
+
+app.registerExtension({
+    name: "Opentag Monitor",
+    async setup() {
+        console.log("✅ 插件已加载 - 等待工作流准备就绪");
+
+        // 存储已注册监听器的节点ID
+        const registeredNodes = new Set();
+
+        // 简化的节点检查函数
+        const checkAndSetupNodes = () => {
+            if (!app.graph || !app.graph.nodes) return;
+
+            // 查找所有Opentag节点
+            const opentagNodes = app.graph.nodes.filter(node =>
+                node?.type.includes("打开提示词标签") ||
+                node?.type === "打开提示词标签"
+            );
+
+            // 遍历节点并设置同步
+            opentagNodes.forEach(node => {
+                // 确保找到两个控件且节点尚未注册监听器
+                const inputTextWidget = node.widgets?.find(w => w.name === "input_text");
+                const inputText1Widget = node.widgets?.find(w => w.name === "input_text1");
+
+                if (inputTextWidget && inputText1Widget && !registeredNodes.has(node.id)) {
+                    console.log("🔔 为节点 " + node.id + " 注册值同步监听器");
+
+                    // 初始同步值
+                    inputText1Widget.value = inputTextWidget.value;
+
+                    // 刷新 input_text1 显示
+                    if (inputText1Widget.onChange) {
+                        inputText1Widget.onChange();
+                    }
+
+                    // 存储原始回调（如果有）
+                    const originalCallback = inputTextWidget.callback;
+
+                    // 创建新的回调函数（使用防抖模拟失去焦点事件）
+                    let debounceTimer;
+                    inputTextWidget.callback = (value, widget, node) => {
+                        console.log("🔄 input_text 值变更: " + value);
+
+                        // 执行原始回调（如果有）
+                        if (originalCallback) {
+                            originalCallback(value, widget, node);
+                        }
+
+                        // 清除之前的定时器
+                        if (debounceTimer) clearTimeout(debounceTimer);
+
+                        // 设置新的定时器（模拟失去焦点）
+                        debounceTimer = setTimeout(() => {
+                            console.log("💫 触发同步（模拟失去焦点）");
+
+                            // 同步到 input_text1
+                            inputText1Widget.value = value;
+
+                            // 刷新 input_text1 显示
+                            if (inputText1Widget.onChange) {
+                                inputText1Widget.onChange();
+                            }
+
+                            // 标记节点需要刷新
+                             try {
+                                app.canvas.setDirty(true);
+                                } catch (e) {
+                                console.warn("刷新画布失败:", e);
+                                }
+                        }, 300); // 300ms后触发，模拟用户停止输入
+                    };
+
+                    // 标记节点已注册监听器
+                    registeredNodes.add(node.id);
+                }
+            });
+        };
+
+        // 初始设置
+        setTimeout(checkAndSetupNodes, 500);
+
+        // 监听节点添加事件
+        app.graph.onNodeAdded = function(node) {
+            checkAndSetupNodes();
+        };
+
+        // 监听节点移除事件，清理注册记录
+        app.graph.onNodeRemoved = function(node) {
+            registeredNodes.delete(node.id);
+        };
+    },
+});
