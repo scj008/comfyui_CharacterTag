@@ -2,7 +2,7 @@ import os
 import time
 class Opentag:
     """
-    提示词第二行，
+    提示词第二行，和第一行同步
     """
     def __init__(self):
         pass

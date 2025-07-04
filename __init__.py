@@ -3,6 +3,7 @@ from .grouping import 人物TAG
 from .openchkptag import Opentag
 from .mod_tag import 模型TAG
 from .list_tag import 列表TAG
+from .open_win import 百度翻译TAG
 
 from aiohttp import web
 from server import PromptServer
@@ -19,7 +20,8 @@ NODE_CLASS_MAPPINGS = {
     "人物提示词分组": 人物TAG,
     "打开提示词标签": Opentag,
     "模型提示词分组": 模型TAG,
-    "人物列表": 列表TAG
+    "人物列表": 列表TAG,
+    "翻译": 百度翻译TAG
 }
 
 # 包含节点友好/人类可读标题的字典
