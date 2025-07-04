@@ -16,6 +16,7 @@ async def get_hello(request):
     return web.json_response("hello")
 
 
+
 NODE_CLASS_MAPPINGS = {
     "人物提示词分组": 人物TAG,
     "打开提示词标签": Opentag,
