@@ -80,7 +80,6 @@ class 百度翻译TAG:
 
     CATEGORY = "人物TAG"
 
-    JS = f"js/btag1.js?t={int(time.time())}"  # 更标准，首字母大写
 
     # 6-20 原始状态 ++ def test(self, 使用模型提示词, 使用人物外观, input_text, input_text1, 文本输入=None,):
     def test(self, 使用模型提示词, input_text,input_text1, 文本输入=None,):
