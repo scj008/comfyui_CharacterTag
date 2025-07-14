@@ -8,11 +8,12 @@ import requests
 import random
 import json
 from hashlib import md5
+import os
 
 class BaiduTranslator:
     def __init__(self):
-        self.appid = '20230306001587954'
-        self.appkey = 'fTgvtoBhR0YSfXV3OE2u'
+        self.appid = ''
+        self.appkey = ''
         self.endpoint = 'http://api.fanyi.baidu.com'
         self.path = '/api/trans/vip/translate'
         self.url = self.endpoint + self.path
@@ -20,7 +21,32 @@ class BaiduTranslator:
     def make_md5(self, s, encoding='utf-8'):
         return md5(s.encode(encoding)).hexdigest()
 
+    def jsonappid(self):
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(current_dir, 'confi.json')
+        try:
+            with open(config_path, 'r', encoding='utf-8') as file:
+                config = json.load(file)
+
+            appid = config.get('APPID')
+            appkey = config.get('APPKEY')
+
+            if not appid or not appkey:
+                raise ValueError("配置文件中缺少必要的 APPID 或 APPKEY。")
+
+            return appid, appkey
+
+        except FileNotFoundError:
+            raise FileNotFoundError(f"未找到 {config_path} 文件，请确保文件存在于当前目录中。")
+        except json.JSONDecodeError:
+            raise RuntimeError("配置文件格式错误，不是一个有效的 JSON 文件。")
+        except Exception as e:
+            raise RuntimeError(f"读取或解析配置文件时发生错误：{e}")
+
     def translate(self, query, from_lang='en', to_lang='zh'):
+        appid, appkey = self.jsonappid()
+        self.appid = appid
+        self.appkey = appkey
         salt = random.randint(32768, 65536)
         sign = self.make_md5(self.appid + query + str(salt) + self.appkey)
 

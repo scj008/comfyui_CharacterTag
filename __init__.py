@@ -25,8 +25,9 @@ NODE_CLASS_MAPPINGS = {
 }
 
 # 包含节点友好/人类可读标题的字典
+# 起到翻译的作用，即人物TAG那里显示中文名；
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "Example1": "提示词分组"
+    "人物提示词分组": "提示词分组"
 }
 
 # # 关键：告诉ComfyUI加载js文件
