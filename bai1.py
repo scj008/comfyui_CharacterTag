@@ -5,8 +5,8 @@ from hashlib import md5
 
 class Baitag:
     def __init__(self):
-        self.appid = '20230306001587954'
-        self.appkey = 'fTgvtoBhR0YSfXV3OE2u'
+        self.appid = ''
+        self.appkey = ''
         self.endpoint = 'http://api.fanyi.baidu.com'
         self.path = '/api/trans/vip/translate'
         self.url = self.endpoint + self.path
